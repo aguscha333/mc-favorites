@@ -19,9 +19,11 @@ class CourseServices {
   }
 
   static unfavoriteCourse(courseId) {
-    return httpClient.delete("/favorites", {
-      courseId,
-      email: process.env.REACT_APP_USER_EMAIL,
+    return httpClient.delete("/favorite", {
+      data: {
+        courseId,
+        email: process.env.REACT_APP_USER_EMAIL,
+      },
     });
   }
 }
