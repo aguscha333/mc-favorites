@@ -1,5 +1,6 @@
-import React, { useEffect, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect, useCallback, useState } from "react";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 import {
   favoriteCourse,
@@ -12,11 +13,27 @@ import CourseItem from "components/CourseItem";
 const CoursesPage = () => {
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    dispatch(getCourses({}));
-  }, [dispatch]);
+  const [page, setPage] = useState(1);
 
-  const courses = useSelector(({ courseReducer }) => courseReducer.data);
+  const handleGetPage = useCallback(
+    (page = 1) => {
+      dispatch(getCourses({ page, limit: 10 }));
+    },
+    [dispatch]
+  );
+
+  const handleGetNextPage = useCallback(() => {
+    setPage(page + 1);
+  }, [page, setPage]);
+
+  useEffect(() => {
+    handleGetPage(page);
+  }, [handleGetPage, page]);
+
+  const { data: courses, endReached } = useSelector(
+    ({ courseReducer }) => courseReducer,
+    shallowEqual
+  );
 
   const handleOnCoursePressed = useCallback(
     ({ id, favorite }) => {
@@ -27,11 +44,22 @@ const CoursesPage = () => {
   );
 
   return (
-    <div className="courses-list">
-      {courses.map((item) => (
-        <CourseItem key={item.id} item={item} onPress={handleOnCoursePressed} />
-      ))}
-    </div>
+    <InfiniteScroll
+      dataLength={courses.length}
+      next={handleGetNextPage}
+      hasMore={!endReached}
+      loader={<div>Loading...</div>}
+    >
+      <div className="courses-list">
+        {courses.map((item) => (
+          <CourseItem
+            key={item.id}
+            item={item}
+            onPress={handleOnCoursePressed}
+          />
+        ))}
+      </div>
+    </InfiniteScroll>
   );
 };
 
